@@ -12,12 +12,20 @@ from .models import (
 )
 
 
-class PeopleSerializer(serializers.HyperlinkedModelSerializer):
+# Field that returns dictionary which includes name and URL of model
+class NameHyperlinkedRelatedField(serializers.HyperlinkedRelatedField):
+    def __init__(self, view_name=None, **kwargs):
+        super(NameHyperlinkedRelatedField, self).__init__(view_name, **kwargs)
 
-    homeworld = serializers.HyperlinkedRelatedField(
-        read_only=True,
-        view_name="planet-detail"
-    )
+    def to_representation(self, value):
+        url = super(NameHyperlinkedRelatedField, self).to_representation(value)
+        return {"name": unicode(value), "url": url}
+
+# Serializer that uses NameHyperlinkedRelatedField
+class NameHyperlinkedModelSerializer(serializers.HyperlinkedModelSerializer):
+    _related_class = NameHyperlinkedRelatedField
+
+class PeopleSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = People
@@ -41,7 +49,7 @@ class PeopleSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class PlanetSerializer(serializers.HyperlinkedModelSerializer):
+class PlanetSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = Planet
@@ -63,7 +71,7 @@ class PlanetSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class FilmSerializer(serializers.HyperlinkedModelSerializer):
+class FilmSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = Film
@@ -73,7 +81,7 @@ class FilmSerializer(serializers.HyperlinkedModelSerializer):
             "opening_crawl",
             "director",
             "producer",
-	    "release_date",
+            "release_date",
             "characters",
             "planets",
             "starships",
@@ -85,12 +93,7 @@ class FilmSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class SpeciesSerializer(serializers.HyperlinkedModelSerializer):
-
-    homeworld = serializers.HyperlinkedRelatedField(
-        read_only=True,
-        view_name='planet-detail'
-    )
+class SpeciesSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = Species
@@ -113,13 +116,7 @@ class SpeciesSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class VehicleSerializer(serializers.HyperlinkedModelSerializer):
-
-    pilots = serializers.HyperlinkedRelatedField(
-        many=True,
-        read_only=True,
-        view_name='people-detail'
-    )
+class VehicleSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = Vehicle
@@ -143,13 +140,7 @@ class VehicleSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class StarshipSerializer(serializers.HyperlinkedModelSerializer):
-
-    pilots = serializers.HyperlinkedRelatedField(
-        many=True,
-        read_only=True,
-        view_name="people-detail"
-    )
+class StarshipSerializer(NameHyperlinkedModelSerializer):
 
     class Meta:
         model = Starship
